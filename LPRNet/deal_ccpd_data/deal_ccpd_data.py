@@ -212,7 +212,7 @@ def verify_img(img_dir, error_img_save_dir):
             if image is None:
                 print(img_file)
                 os.remove(img_file)
-                file_util.move_file(img_file, error_img_save_dir)
+                #file_util.move_file(img_file, error_img_save_dir)
                 remove += 1
     print("共{0}张图片，有问题的图片{1}张".format(total, remove))
 
@@ -220,21 +220,22 @@ def verify_img(img_dir, error_img_save_dir):
 
 if __name__ == "__main__":
     img_dir_ = '/home/luxian/Datasets/lcp/CCPD2019/'
-    save_dir_ = '/home/luxian/tf/dataccpd/dataset'
-    log_txt_ = '/home/luxian/tf/dataccpd/readme.txt'
+    save_dir_ = '/home/luxian/tf/projects/LPRNet/LPRNet_Pytorch-master/dataset/ccpd2019'
+    #log_txt_ = '/home/luxian/tf/dataccpd/readme.txt'
 
     # step 1 : 保存车牌图片-提取图片中的车牌
     #fetch_plate_img(img_dir=img_dir_, save_dir=save_dir_)
 
     # step 2 : 图片校验，删除有问题的图片
-    error_img_save_dir_ = "/home/luxian/tf/dataccpd/error_train"
-    train_dir_ = '/home/luxian/tf/dataccpd/train'
-    eval_dir_ = '/home/luxian/tf/dataccpd/eval'
+    error_img_save_dir_ = "/home/luxian/tf/projects/LPRNet/LPRNet_Pytorch-master/dataset/error_train"
+    train_dir_ = '/home/luxian/tf/projects/LPRNet/LPRNet_Pytorch-master/dataset/train'
+    eval_dir_ = '/home/luxian/tf/projects/LPRNet/LPRNet_Pytorch-master/dataset/eval'
     verify_img(img_dir=eval_dir_, error_img_save_dir=error_img_save_dir_)
+    verify_img(img_dir=train_dir_, error_img_save_dir=error_img_save_dir_)
 
     # step 3 : 统计出车牌中每个字符的个数
     #statistics(img_dir=img_dir_, log_txt=log_txt_)
-    train_dir_ = '/home/luxian/tf/dataccpd/train'
+    #train_dir_ = '/home/luxian/tf/dataccpd/train'
     
     
     #step 4 : 生成训练-评估数据

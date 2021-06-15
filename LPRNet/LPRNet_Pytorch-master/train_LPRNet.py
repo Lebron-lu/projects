@@ -51,23 +51,23 @@ def get_parser():
     parser = argparse.ArgumentParser(description='parameters to train net')
     parser.add_argument('--max_epoch', default=50, help='epoch to train the network')
     parser.add_argument('--img_size', default=(94, 24), help='the image size')
-    parser.add_argument('--train_img_dirs', default="~/workspace/trainMixLPR", help='the train images path')
-    parser.add_argument('--test_img_dirs', default="~/workspace/testMixLPR", help='the test images path')
+    parser.add_argument('--train_img_dirs', default="./dataset/train", help='the train images path')
+    parser.add_argument('--test_img_dirs', default="./dataset/eval", help='the test images path')
     parser.add_argument('--dropout_rate', default=0.5, help='dropout rate.')
     parser.add_argument('--learning_rate', default=0.1, help='base value of learning rate.')
     parser.add_argument('--lpr_max_len', default=8, help='license plate number max length.')
     parser.add_argument('--train_batch_size', default=128, help='training batch size.')
     parser.add_argument('--test_batch_size', default=120, help='testing batch size.')
     parser.add_argument('--phase_train', default=True, type=bool, help='train or test phase flag.')
-    parser.add_argument('--num_workers', default=16, type=int, help='Number of workers used in dataloading')
+    parser.add_argument('--num_workers', default=8, type=int, help='Number of workers used in dataloading')
     parser.add_argument('--cuda', default=True, type=bool, help='Use cuda to train model')
     parser.add_argument('--resume_epoch', default=0, type=int, help='resume iter for retraining')
     parser.add_argument('--save_interval', default=1625, type=int, help='interval for save model state dict')
     parser.add_argument('--test_interval', default=1625, type=int, help='interval for evaluate')
     parser.add_argument('--momentum', default=0.9, type=float, help='momentum')
     parser.add_argument('--weight_decay', default=2e-5, type=float, help='Weight decay for SGD')
-    parser.add_argument('--lr_schedule', default=[4, 8, 12, 14, 16], help='schedule for learning rate.')
-    parser.add_argument('--save_folder', default='./weights/', help='Location to save checkpoint models')
+    parser.add_argument('--lr_schedule', default=[4, 8, 12, 14, 16, 20], help='schedule for learning rate.')
+    parser.add_argument('--save_folder', default='./pth_to_tflite/', help='Location to save checkpoint models')
     # parser.add_argument('--pretrained_model', default='./weights/Final_LPRNet_model.pth', help='pretrained base model')
     parser.add_argument('--pretrained_model', default='', help='pretrained base model')
 
@@ -87,7 +87,8 @@ def collate_fn(batch):
     labels = np.asarray(labels).flatten().astype(np.int)
 
     return (torch.stack(imgs, 0), torch.from_numpy(labels), lengths)
-
+acc = 0.
+cd = 1
 def train():
     args = get_parser()
 
@@ -122,10 +123,10 @@ def train():
                 elif key.split('.')[-1] == 'bias':
                     m.state_dict()[key][...] = 0.01
 
-        #lprnet.backbone.apply(weights_init)
-        #lprnet.container.apply(weights_init)
-        for m in lprnet.modules():
-            m.apply(weights_init)
+        lprnet.backbone.apply(weights_init)
+        lprnet.container.apply(weights_init)
+        #for m in lprnet.modules():
+           # m.apply(weights_init)
         print("initial net weights successful!")
 
     # define optimizer
@@ -159,7 +160,10 @@ def train():
             # lprnet.train() # should be switch to train mode
             
         if iteration !=0 and iteration % args.save_interval == 0:
-            torch.save(lprnet, args.save_folder + 'LPRNet_' + 'Acc_' + repr(Acc*100.0) + '.pth')
+            if Acc > acc:
+                acc = Acc
+                torch.save(lprnet, args.save_folder + 'LPRNet_' + 'Acc_' + repr(np.around(Acc*100.0)) + '.pth')
+                os.remove('./pth_to_tflite/' + 'LPRNet_' + 'Acc_' + repr(np.around(acc*100.0)) + '.pth')
 
 
         start_time = time.time()
@@ -173,8 +177,8 @@ def train():
         lr = adjust_learning_rate(optimizer, epoch, args.learning_rate, args.lr_schedule)
           
         if args.cuda:
-            images = Variable(images, requires_grad=False).cuda(1)
-            labels = Variable(labels, requires_grad=False).cuda(1)
+            images = Variable(images, requires_grad=False).cuda(cd)
+            labels = Variable(labels, requires_grad=False).cuda(cd)
         else:
             images = Variable(images, requires_grad=False)
             labels = Variable(labels, requires_grad=False)
@@ -204,7 +208,7 @@ def train():
     Acc = Greedy_Decode_Eval(lprnet, test_dataset, args)
 
     # save final parameters
-    torch.save(lprnet, args.save_folder + 'Final_LPRNet_Acc_' + repr(Acc*100.0) + '.pth')
+    #torch.save(lprnet, args.save_folder + 'Final_LPRNet_Acc_' + repr(Acc*100.0) + '.pth')
 
 def Greedy_Decode_Eval(Net, datasets, args):
     # TestNet = Net.eval()
@@ -227,7 +231,7 @@ def Greedy_Decode_Eval(Net, datasets, args):
         targets = np.array([el.numpy() for el in targets])
 
         if args.cuda:
-            images = Variable(images.cuda(1))
+            images = Variable(images.cuda(cd))
         else:
             images = Variable(images)
 

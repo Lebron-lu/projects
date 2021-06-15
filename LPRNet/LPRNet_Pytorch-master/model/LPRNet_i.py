@@ -24,27 +24,38 @@ class LPRNet(nn.Module):
         self.class_num = class_num
         self.backbone = nn.Sequential(
             nn.Conv2d(in_channels=3, out_channels=64, kernel_size=3, stride=1), # 0
-            #nn.BatchNorm2d(num_features=64),
+            nn.BatchNorm2d(num_features=64),
             nn.ReLU(),  # 2
-            nn.MaxPool3d(kernel_size=(1, 3, 3), stride=(1, 1, 1)),
+            
+            #nn.MaxPool3d(kernel_size=(1, 3, 3), stride=(1, 1, 1)),
+            nn.MaxPool2d(kernel_size=(3, 3), stride=(1, 1)), # 更改的地方
+            
             small_basic_block(ch_in=64, ch_out=128),    # *** 4 ***
-            #nn.BatchNorm2d(num_features=128),
+            nn.BatchNorm2d(num_features=128),
             nn.ReLU(),  # 6
-            nn.MaxPool3d(kernel_size=(1, 3, 3), stride=(2, 1, 2)),
+            
+            #nn.MaxPool3d(kernel_size=(1, 3, 3), stride=(2, 1, 2)),
+            nn.MaxPool2d(kernel_size=(3, 3), stride=(1, 2)), # 更改的地方
+            nn.Conv2d(in_channels=128, out_channels=64, kernel_size=(1,1), stride=1), # 更改的地方
+            
             small_basic_block(ch_in=64, ch_out=256),   # 8
-            #nn.BatchNorm2d(num_features=256),
+            nn.BatchNorm2d(num_features=256),
             nn.ReLU(),  # 10
             small_basic_block(ch_in=256, ch_out=256),   # *** 11 ***
-            #nn.BatchNorm2d(num_features=256),   # 12
+            nn.BatchNorm2d(num_features=256),   # 12
             nn.ReLU(),
-            nn.MaxPool3d(kernel_size=(1, 3, 3), stride=(4, 1, 2)),  # 14
+            
+            #nn.MaxPool3d(kernel_size=(1, 3, 3), stride=(4, 1, 2)),  # 14
+            nn.MaxPool2d(kernel_size=(3, 3), stride=(1, 2)), # 更改的地方
+            nn.Conv2d(in_channels=256, out_channels=64, kernel_size=(1,1), stride=1), # 更改的地方
+            
             nn.Dropout(dropout_rate),
             nn.Conv2d(in_channels=64, out_channels=256, kernel_size=(1, 4), stride=1),  # 16
-            #nn.BatchNorm2d(num_features=256),
+            nn.BatchNorm2d(num_features=256),
             nn.ReLU(),  # 18
             nn.Dropout(dropout_rate),
             nn.Conv2d(in_channels=256, out_channels=class_num, kernel_size=(13, 1), stride=1), # 20
-            #nn.BatchNorm2d(num_features=class_num),
+            nn.BatchNorm2d(num_features=class_num),
             nn.ReLU(),  # *** 22 ***
         )
         self.container = nn.Sequential(
@@ -61,7 +72,7 @@ class LPRNet(nn.Module):
             x = layer(x)
             """if i in [2, 6, 13, 22]: # [2, 4, 8, 11, 22]
                 keep_features.append(x)"""
-            if i in [1, 4, 9, 16]:
+            if i in [2, 6, 14, 24]:
                 keep_features.append(x)
 
         global_context = list()
