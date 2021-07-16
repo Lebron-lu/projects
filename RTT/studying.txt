@@ -1,0 +1,23 @@
+NAS 账号：
+name=luxian
+password=dkQv8T16T2gg6cKG
+NAS地址  192.168.10.12 (需要在上海办公室访问，或VPN登录)
+NAS网页登录地址 http://office.rt-thread.com:5000/
+
+
+git 服务器：
+https://git.rt-thread.com/
+name = luxian@rt-thread.com
+password = shagua520914..
+
+rt-thread论坛
+username：lebronlu
+password：shagua520914..
+
+翻墙账号：
+luxian@163.com
+as987321.
+
+os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
+
+指定GPU/: 1训练： os.environ['CUDA_VISIBLE_DEVICES'] = '1'
