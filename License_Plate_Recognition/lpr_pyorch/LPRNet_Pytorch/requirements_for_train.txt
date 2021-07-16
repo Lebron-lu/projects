@@ -1,0 +1,6 @@
+python==3.6
+pytorch==1.4.0
+opencv-python==3.4.1.15
+imutils==0.5.4
+Pillow==8.2.0
+numpy==1.19.5
