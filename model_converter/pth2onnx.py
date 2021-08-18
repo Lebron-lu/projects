@@ -52,6 +52,7 @@ if os.path.isfile(args.onnx_path):
                                 "output": {0: "1"}}
                     )
 
+# onnx 模型推理
 # import onnxruntime as ort
 # import numpy as np
 # import cv2
