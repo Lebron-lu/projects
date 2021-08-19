@@ -10,10 +10,17 @@ CHARS = ['京', '沪', '津', '渝', '冀', '晋', '蒙', '辽', '吉', '黑',
          '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
          'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K',
          'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',
-         'W', 'X', 'Y', 'Z', 'I', 'O', '-'
+         'W', 'X', 'Y', 'Z', '-'
          ]
 
 CHARS_DICT = {char: i for i, char in enumerate(CHARS)}
+
+# 对数据进行归一化
+def preprocess(inputs, std=255. ,mean=0., expand_dims=None):
+    inputs = (inputs - mean) / std
+    if expand_dims is not None:
+        np.expand_dims(inputs,expand_dims)
+    return inputs
 
 # 图片转换操作，注意：cv2读取的图片为GBR格式,转为RGB格式
 def transform(img):
@@ -32,7 +39,7 @@ def check(label):
         return True
 
 # 生成tf.data.Dataset数据集用于训练
-def load_data(img_dir, lpr_len, batch_size, img_size=(94, 24)):
+def load_data(img_dir, lpr_len, img_size=(94, 24)):
     imgs_num = len(os.listdir(img_dir))
     
     imgs = []
@@ -45,20 +52,21 @@ def load_data(img_dir, lpr_len, batch_size, img_size=(94, 24)):
             label.append(CHARS_DICT[c])
         if len(label) == 8:
             if check(label) == False:
-                print(img)
                 assert 0, "Error label!"
         # 生成image数据
         img = cv2.imread(os.path.join(img_dir, img))
         img = transform(img)
         height, width, _ = img.shape
         if height != img_size[1] or width != img_size[0]:
-                img = cv2.resize(img, img_size)
-        
+            img = cv2.resize(img, img_size)
         imgs.append(img)
         labels.append(label)
+        
+    imgs_dataset = tf.data.Dataset.from_tensor_slices(imgs)
+    labels = tf.data.Dataset.from_tensor_slices(labels)
     
-    dataset = tf.data.Dataset.from_tensor_slices((imgs, labels))
-    return dataset, imgs_num
+#     dataset = tf.data.Dataset.from_tensor_slices((imgs, labels))
+    return imgs_dataset, labels, imgs_num
 
 # 由dense生成sparse
 def sparse_tuple_from(sequences, dtype=np.int32):

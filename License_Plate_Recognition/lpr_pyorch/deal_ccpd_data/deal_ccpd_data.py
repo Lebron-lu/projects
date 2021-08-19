@@ -1,9 +1,9 @@
 # -*- coding:utf-8 -*-
-# Author:      zhousf
-# Date:        2019-09-11
+# Author:      luxian
+# Date:        2021/06/05
 # File:        deal_ccpd_data.py
-# Description:  CCPD2019车牌数据集
-# https://github.com/detectRecog/CCPD
+# Description:  CCPD2019车牌数据集处理
+
 import os
 import cv2
 from core.util import img_util

@@ -7,11 +7,15 @@ class small_basic_block(tf.keras.layers.Layer):
     def __init__(self, filters):
         super(small_basic_block, self).__init__()
         self.block = tf.keras.Sequential([
-            ly.Conv2D(filters=filters // 4, kernel_size=1, strides=1, activation='relu'),
-            ly.Conv2D(filters=filters // 4, kernel_size=(3, 1), strides=1, padding='same',
-                      activation='relu'),
-            ly.Conv2D(filters=filters // 4, kernel_size=(1, 3), strides=1, padding='same',
-                      activation='relu'),
+            ly.Conv2D(filters=filters // 4, kernel_size=1, strides=1),
+            ly.BatchNormalization(),
+            ly.ReLU(),
+            ly.Conv2D(filters=filters // 4, kernel_size=(3, 1), strides=1, padding='same'),
+            ly.BatchNormalization(),
+            ly.ReLU(),
+            ly.Conv2D(filters=filters // 4, kernel_size=(1, 3), strides=1, padding='same'),
+            ly.BatchNormalization(),
+            ly.ReLU(),
             ly.Conv2D(filters=filters, kernel_size=1, strides=1)
         ])
     def call(self, inputs):
@@ -26,20 +30,20 @@ class LPRNet(tf.keras.Model):
         self.class_num = class_num
         self.dropout_rate = dropout_rate
 
-        # 第1个inception
+        # 第1个 inception
         self.icp_1 = tf.keras.Sequential([
             ly.Conv2D(filters=64, kernel_size=3, strides=1, name='input'),
             ly.BatchNormalization(),
             ly.ReLU()
-        ])
-        # 第2个inception
+        ]) 
+        # 第2个 inception
         self.icp_2 = tf.keras.Sequential([
             ly.MaxPool2D(pool_size=3, strides=1),
             small_basic_block(filters=128),
             ly.BatchNormalization(),
             ly.ReLU()
         ])
-        # 第3个inception
+        # 第3个 inception
         self.icp_3 = tf.keras.Sequential([
             ly.MaxPool2D(pool_size=(3, 3), strides=(1, 2)),
             small_basic_block(filters=256),
@@ -49,7 +53,7 @@ class LPRNet(tf.keras.Model):
             ly.BatchNormalization(),
             ly.ReLU()
         ])
-        # 第4个inception
+        # 第4个 inception
         self.icp_4 = tf.keras.Sequential([
             ly.MaxPool2D(pool_size=(3, 3), strides=(1, 2)),
             ly.Dropout(rate=dropout_rate),
@@ -64,8 +68,8 @@ class LPRNet(tf.keras.Model):
 
         self.container = tf.keras.Sequential([
             ly.Conv2D(filters=class_num, kernel_size=1, strides=1),
-            # ly.BatchNormalization(),
-            # ly.ReLU(),
+#             ly.BatchNormalization(),
+#             ly.ReLU(),
             # ly.Conv2D(filters=lpr_len + 1, kernel_size=3, strides=2),
             # ly.ReLU()
         ])
@@ -89,7 +93,9 @@ class LPRNet(tf.keras.Model):
 
         x = tf.concat(global_context, axis=3)
         x = self.container(x)
-        output = tf.reduce_mean(x, axis=1, name='output')
+        x = tf.transpose(x, [0, 3, 1, 2])
+        output = tf.reduce_mean(x, axis=2)
+#         output = tf.keras.layers.Softmax(axis=1)(output)
 
         return output
 
